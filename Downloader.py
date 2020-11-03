@@ -1,14 +1,48 @@
-from typing import List
-from bs4 import BeautifulSoup as bs
-import requests
-import csv
-import os
-import wget
-import io
 from multiprocessing.pool import ThreadPool
+from typing import List
+import subprocess
+import sys
+import os
+import io
 
-version = 3.4
 
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+exit_val = False
+
+try:
+    from bs4 import BeautifulSoup as bs
+except Exception:
+    install('bs4')
+    exit_val = True
+
+try:
+    import requests
+except Exception:
+    install('requests')
+    exit_val = True
+
+try:
+    import csv
+except Exception:
+    install('csv')
+    exit_val = True
+
+
+try:
+    import wget
+except Exception:
+    install('wget')
+    exit_val = True
+
+    
+if exit_val:
+    print('\n\nFinished installing the required modules, please restart the script.')
+    print('exitig...')
+    exit()
+
+
+version = 3.5
 
 def version_check(x):
     global cur_ver
@@ -70,7 +104,7 @@ def downloader(src_url):
     titles: List[str] = list()
     final: List[str] = list()
     dow_urls = list()
-    g = list()
+    g = list() #quality list
 
     def vid_selector(link):
         sauce = bs(requests.get(link).content, "html.parser")
@@ -94,7 +128,7 @@ def downloader(src_url):
                         print("quality {} not available for one episode".format(opt))
                         return "This quality does not exist on the server"
                     
-    if src_url.split("https://")[1][0] == "y":
+    if "yugenani" in src_url:
 
         try:
             last_page = int(
@@ -447,9 +481,9 @@ def search_prep():
         print("OK")
         search_prep()
     elif opt >= 0 and opt < len(search_elements):
-        #            print(search_elements[opt][1])
+#            print(search_elements[opt][1])
         found_url = search_elements[opt][1]
-        return
+        return None
     else:
         print("Enter correct option in range !")
         search_prep()
@@ -458,7 +492,8 @@ def go():
     options = [
         "Give a specific URL (Gogoanime or Yugenani)",
         "Use the anime_list.csv to get many anime! (Including somewhat fuzzy search !)",
-        "New! Search for an anime directly",
+        "Search for an anime directly",
+        "Use this if option 2 doesn't show the desired results\n"
     ]
     for j, i in enumerate(options):
         print(j, i)
@@ -478,11 +513,14 @@ def go():
         while True:
             try:
                 search_prep()
+                print()
                 break
             except AttributeError:
                 print("Sorry, found no results for that (check spelling?)")
-
         downloader(found_url)
+    elif begin == 3:
+        import search_and_download
+        print("\nOMEDETO !!\n")
     else:
         print(
             "\nNot implemented yet! Check \nhttps://github.com/KorigamiK/ultimate-batch-anime-downloader\n "
@@ -492,4 +530,5 @@ def go():
 
 if __name__ == "__main__":
     check_ver()
+    print()
     go()
